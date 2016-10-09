@@ -2,11 +2,15 @@
 # by Dr. Richard Wallace at the following site:
 # http://www.alicebot.org/documentation/matching.html
 
+from __future__ import print_function
+
 import marshal
 import pprint
 import re
 import string
 import sys
+
+from .constants import *
 
 class PatternMgr:
 	# special dictionary keys
@@ -35,7 +39,7 @@ class PatternMgr:
 
 		"""
 		# Collapse a multi-word name into a single word
-		self._botName = unicode(string.join(name.split()))
+		self._botName = unicode( ' '.join(name.split()) )
 
 	def dump(self):
 		"""Print all learned patterns, for debugging purposes."""
@@ -52,9 +56,9 @@ class PatternMgr:
 			marshal.dump(self._botName, outFile)
 			marshal.dump(self._root, outFile)
 			outFile.close()
-		except Exception, e:
-			print "Error saving PatternMgr to file %s:" % filename
-			raise Exception, e
+		except Exception as e:
+			print( "Error saving PatternMgr to file %s:" % filename )
+			raise
 
 	def restore(self, filename):
 		"""Restore a previously save()d collection of patterns."""
@@ -64,15 +68,16 @@ class PatternMgr:
 			self._botName = marshal.load(inFile)
 			self._root = marshal.load(inFile)
 			inFile.close()
-		except Exception, e:
-			print "Error restoring PatternMgr from file %s:" % filename
-			raise Exception, e
+		except Exception as e:
+			print( "Error restoring PatternMgr from file %s:" % filename )
+			raise
 
-	def add(self, (pattern,that,topic), template):
+	def add(self, data, template):
 		"""Add a [pattern/that/topic] tuple and its corresponding template
 		to the node tree.
 
 		"""
+		pattern,that,topic = data
 		# TODO: make sure words contains only legal characters
 		# (alphanumerics,*,_)
 
@@ -87,13 +92,13 @@ class PatternMgr:
 				key = self._STAR
 			elif key == u"BOT_NAME":
 				key = self._BOT_NAME
-			if not node.has_key(key):
+			if key not in node:
 				node[key] = {}
 			node = node[key]
 
 		# navigate further down, if a non-empty "that" pattern was included
 		if len(that) > 0:
-			if not node.has_key(self._THAT):
+			if self._THAT not in node:
 				node[self._THAT] = {}
 			node = node[self._THAT]
 			for word in string.split(that):
@@ -102,13 +107,13 @@ class PatternMgr:
 					key = self._UNDERSCORE
 				elif key == u"*":
 					key = self._STAR
-				if not node.has_key(key):
+				if key not in node:
 					node[key] = {}
 				node = node[key]
 
 		# navigate yet further down, if a non-empty "topic" string was included
 		if len(topic) > 0:
-			if not node.has_key(self._TOPIC):
+			if self._TOPIC not in node:
 				node[self._TOPIC] = {}
 			node = node[self._TOPIC]
 			for word in string.split(topic):
@@ -117,13 +122,13 @@ class PatternMgr:
 					key = self._UNDERSCORE
 				elif key == u"*":
 					key = self._STAR
-				if not node.has_key(key):
+				if key not in node:
 					node[key] = {}
 				node = node[key]
 
 
 		# add the template.
-		if not node.has_key(self._TEMPLATE):
+		if self._TEMPLATE not in node:
 			self._templateCount += 1	
 		node[self._TEMPLATE] = template
 
@@ -139,14 +144,14 @@ class PatternMgr:
 			return None
 		# Mutilate the input.  Remove all punctuation and convert the
 		# text to all caps.
-		input = string.upper(pattern)
+		input = pattern.upper()
 		input = re.sub(self._puncStripRE, " ", input)
 		if that.strip() == u"": that = u"ULTRABOGUSDUMMYTHAT" # 'that' must never be empty
-		thatInput = string.upper(that)
+		thatInput = that.upper()
 		thatInput = re.sub(self._puncStripRE, " ", thatInput)
 		thatInput = re.sub(self._whitespaceRE, " ", thatInput)
 		if topic.strip() == u"": topic = u"ULTRABOGUSDUMMYTOPIC" # 'topic' must never be empty
-		topicInput = string.upper(topic)
+		topicInput = topic.upper()
 		topicInput = re.sub(self._puncStripRE, " ", topicInput)
 		
 		# Pass the input off to the recursive call
@@ -165,15 +170,15 @@ class PatternMgr:
 		"""
 		# Mutilate the input.  Remove all punctuation and convert the
 		# text to all caps.
-		input = string.upper(pattern)
+		input = pattern.upper()
 		input = re.sub(self._puncStripRE, " ", input)
 		input = re.sub(self._whitespaceRE, " ", input)
 		if that.strip() == u"": that = u"ULTRABOGUSDUMMYTHAT" # 'that' must never be empty
-		thatInput = string.upper(that)
+		thatInput = that.upper()
 		thatInput = re.sub(self._puncStripRE, " ", thatInput)
 		thatInput = re.sub(self._whitespaceRE, " ", thatInput)
 		if topic.strip() == u"": topic = u"ULTRABOGUSDUMMYTOPIC" # 'topic' must never be empty
-		topicInput = string.upper(topic)
+		topicInput = topic.upper()
 		topicInput = re.sub(self._puncStripRE, " ", topicInput)
 		topicInput = re.sub(self._whitespaceRE, " ", topicInput)
 
@@ -196,7 +201,7 @@ class PatternMgr:
 			words = topicInput.split()
 		else:
 			# unknown value
-			raise ValueError, "starType must be in ['star', 'thatstar', 'topicstar']"
+			raise ValueError( "starType must be in ['star', 'thatstar', 'topicstar']" )
 		
 		# compare the input string to the matched pattern, word by word.
 		# At the end of this loop, if foundTheRightStar is true, start and
@@ -241,10 +246,10 @@ class PatternMgr:
 			
 		# extract the star words from the original, unmutilated input.
 		if foundTheRightStar:
-			#print string.join(pattern.split()[start:end+1])
-			if starType == 'star': return string.join(pattern.split()[start:end+1])
-			elif starType == 'thatstar': return string.join(that.split()[start:end+1])
-			elif starType == 'topicstar': return string.join(topic.split()[start:end+1])
+			#print( ' '.join(pattern.split()[start:end+1]) )
+			if starType == 'star': return ' '.join(pattern.split()[start:end+1])
+			elif starType == 'thatstar': return ' '.join(that.split()[start:end+1])
+			elif starType == 'topicstar': return ' '.join(topic.split()[start:end+1])
 		else: return ""
 
 	def _match(self, words, thatWords, topicWords, root):
@@ -292,7 +297,7 @@ class PatternMgr:
 		# Check underscore.
 		# Note: this is causing problems in the standard AIML set, and is
 		# currently disabled.
-		if root.has_key(self._UNDERSCORE):
+		if self._UNDERSCORE in root:
 			# Must include the case where suf is [] in order to handle the case
 			# where a * or _ is at the end of the pattern.
 			for j in range(len(suffix)+1):
@@ -303,21 +308,21 @@ class PatternMgr:
 					return (newPattern, template)
 
 		# Check first
-		if root.has_key(first):
+		if first in root:
 			pattern, template = self._match(suffix, thatWords, topicWords, root[first])
 			if template is not None:
 				newPattern = [first] + pattern
 				return (newPattern, template)
 
 		# check bot name
-		if root.has_key(self._BOT_NAME) and first == self._botName:
+		if self._BOT_NAME in root and first == self._botName:
 			pattern, template = self._match(suffix, thatWords, topicWords, root[self._BOT_NAME])
 			if template is not None:
 				newPattern = [first] + pattern
 				return (newPattern, template)
 		
 		# check star
-		if root.has_key(self._STAR):
+		if self._STAR in root:
 			# Must include the case where suf is [] in order to handle the case
 			# where a * or _ is at the end of the pattern.
 			for j in range(len(suffix)+1):
