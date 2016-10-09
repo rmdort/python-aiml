@@ -232,7 +232,10 @@ class AimlHandler(ContentHandler):
                                         attrDict[k.encode(self._encoding)] = unicode(v)
 			self._validateElemStart(name, attrDict, self._version)
 			# Push the current element onto the element stack.
-			self._elemStack.append([name.encode(self._encoding),attrDict])
+			if PY3:
+				self._elemStack.append([str(name),attrDict])
+			else:
+				self._elemStack.append([name.encode(self._encoding),attrDict])
 			self._pushWhitespaceBehavior(attr)
 			# If this is a condition element, push a new entry onto the
 			# foundDefaultLiStack
@@ -464,7 +467,6 @@ class AimlHandler(ContentHandler):
 		invalid.  Otherwise, no news is good news.
 
 		"""		
-		import pprint; print("\nATTR"),pprint.pprint(attr)
 		# Check the element's attributes.  Make sure that all required
 		# attributes are present, and that any remaining attributes are
 		# valid options.		

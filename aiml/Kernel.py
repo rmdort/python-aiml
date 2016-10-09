@@ -25,6 +25,25 @@ from .PatternMgr import PatternMgr
 from .WordSub import WordSub
 import aiml.DefaultSubs
 
+if PY3:
+    def tencode( msg, dummy ):
+        return str(msg)
+
+    def tdecode( msg, dummy ):
+        return str(msg)
+else:
+    def tencode( msg, encoding ):
+        try:
+            return msg.encode(encoding,'replace')
+        except UnicodeError: 
+            return msg
+    def tdecode( msg, encoding ):
+        try:
+            return msg.decode(encoding,'replace')
+        except UnicodeError: 
+            return msg
+
+
 class Kernel:
     # module constants
     _globalSessionID = "_global" # key of the global session (duh)
@@ -310,7 +329,7 @@ class Kernel:
 
         #ensure that input is a unicode string
         if not PY3:
-            try: input_ = input_.decode(self._textEncoding, 'replace')
+            try: input_ = tdecode(input_,self._textEncoding)
             except UnicodeError: pass
             except AttributeError: pass
         
@@ -350,9 +369,7 @@ class Kernel:
         
         # release the lock and return
         self._respondLock.release()
-        if not PY3:
-            try: return finalResponse.encode(self._textEncoding)
-            except UnicodeError: return finalResponse
+        return tencode(finalResponse,self._textEncoding)
 
     # This version of _respond() just fetches the response for some input.
     # It does not mess with the input and output histories.  Recursive calls
@@ -367,7 +384,7 @@ class Kernel:
         inputStack = self.getPredicate(self._inputStack, sessionID)
         if len(inputStack) > self._maxRecursionDepth:
             if self._verboseMode:
-                err = "WARNING: maximum recursion depth exceeded (input='%s')" % input_.encode(self._textEncoding, 'replace')
+                err = "WARNING: maximum recursion depth exceeded (input='%s')" % tencode(input_,self._textEncoding)
                 sys.stderr.write(err)
             return ""
 
@@ -395,7 +412,7 @@ class Kernel:
         elem = self._brain.match(subbedInput, subbedThat, subbedTopic)
         if elem is None:
             if self._verboseMode:
-                err = "WARNING: No match found for input: %s\n" % input_.encode(self._textEncoding)
+                err = "WARNING: No match found for input: %s\n" % tencode(input_,self._textEncoding)
                 sys.stderr.write(err)
         else:
             # Process the element into a response string.
@@ -427,7 +444,7 @@ class Kernel:
             # Oops -- there's no handler function for this element
             # type!
             if self._verboseMode:
-                err = "WARNING: No handler found for <%s> element\n" % elem[0].encode(self._textEncoding, 'replace')
+                err = "WARNING: No handler found for <%s> element\n" % tencode(elem[0],self._textEncoding)
                 sys.stderr.write(err)
             return ""
         return handlerFunc(elem, sessionID)
@@ -788,8 +805,8 @@ class Kernel:
             response += self._processElement(e, sessionID)
         try:
             response = response.strip()
-            words = string.split(response, " ", 1)
-            words[0] = string.capitalize(words[0])
+            words = response.split(" ", 1)
+            words[0] = words[0].capitalize()
             response = ' '.join(words)
             return response
         except IndexError: # response was empty
@@ -911,7 +928,7 @@ class Kernel:
             out = os.popen(command)            
         except RuntimeError as msg:
             if self._verboseMode:
-                err = "WARNING: RuntimeError while processing \"system\" element:\n%s\n" % msg.encode(self._textEncoding, 'replace')
+                err = "WARNING: RuntimeError while processing \"system\" element:\n%s\n" % tencode(msg,self._textEncoding)
                 sys.stderr.write(err)
             return "There was an error while computing my response.  Please inform my botmaster."
         time.sleep(0.01) # I'm told this works around a potential IOError exception.
@@ -1094,13 +1111,13 @@ def _testTag(kern, tag, input_, outputList):
     global _numTests, _numPassed
     _numTests += 1
     print( "Testing <" + tag + ">:", end='' )
-    response = kern.respond(input_).decode(kern._textEncoding)
+    response = tdecode(kern.respond(input_),kern._textEncoding)
     if response in outputList:
         print( "PASSED" )
         _numPassed += 1
         return True
     else:
-        print( "FAILED (response: '%s')" % response.encode(kern._textEncoding, 'replace') )
+        print( "FAILED (response: '%s')" % tencode(response,kern._textEncoding) )
         return False
 
 if __name__ == "__main__":

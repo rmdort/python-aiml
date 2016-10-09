@@ -84,7 +84,7 @@ class PatternMgr:
 		# Navigate through the node tree to the template's location, adding
 		# nodes if necessary.
 		node = self._root
-		for word in string.split(pattern):
+		for word in pattern.split():
 			key = word
 			if key == u"_":
 				key = self._UNDERSCORE
@@ -101,7 +101,7 @@ class PatternMgr:
 			if self._THAT not in node:
 				node[self._THAT] = {}
 			node = node[self._THAT]
-			for word in string.split(that):
+			for word in that.split():
 				key = word
 				if key == u"_":
 					key = self._UNDERSCORE
@@ -116,7 +116,7 @@ class PatternMgr:
 			if self._TOPIC not in node:
 				node[self._TOPIC] = {}
 			node = node[self._TOPIC]
-			for word in string.split(topic):
+			for word in topic.split():
 				key = word
 				if key == u"_":
 					key = self._UNDERSCORE
@@ -144,8 +144,8 @@ class PatternMgr:
 			return None
 		# Mutilate the input.  Remove all punctuation and convert the
 		# text to all caps.
-		input = pattern.upper()
-		input = re.sub(self._puncStripRE, " ", input)
+		input_ = pattern.upper()
+		input_ = re.sub(self._puncStripRE, " ", input_)
 		if that.strip() == u"": that = u"ULTRABOGUSDUMMYTHAT" # 'that' must never be empty
 		thatInput = that.upper()
 		thatInput = re.sub(self._puncStripRE, " ", thatInput)
@@ -155,7 +155,7 @@ class PatternMgr:
 		topicInput = re.sub(self._puncStripRE, " ", topicInput)
 		
 		# Pass the input off to the recursive call
-		patMatch, template = self._match(input.split(), thatInput.split(), topicInput.split(), self._root)
+		patMatch, template = self._match(input_.split(), thatInput.split(), topicInput.split(), self._root)
 		return template
 
 	def star(self, starType, pattern, that, topic, index):
@@ -170,9 +170,9 @@ class PatternMgr:
 		"""
 		# Mutilate the input.  Remove all punctuation and convert the
 		# text to all caps.
-		input = pattern.upper()
-		input = re.sub(self._puncStripRE, " ", input)
-		input = re.sub(self._whitespaceRE, " ", input)
+		input_ = pattern.upper()
+		input_ = re.sub(self._puncStripRE, " ", input_)
+		input_ = re.sub(self._whitespaceRE, " ", input_)
 		if that.strip() == u"": that = u"ULTRABOGUSDUMMYTHAT" # 'that' must never be empty
 		thatInput = that.upper()
 		thatInput = re.sub(self._puncStripRE, " ", thatInput)
@@ -183,7 +183,7 @@ class PatternMgr:
 		topicInput = re.sub(self._whitespaceRE, " ", topicInput)
 
 		# Pass the input off to the recursive pattern-matcher
-		patMatch, template = self._match(input.split(), thatInput.split(), topicInput.split(), self._root)
+		patMatch, template = self._match(input_.split(), thatInput.split(), topicInput.split(), self._root)
 		if template == None:
 			return ""
 
@@ -192,7 +192,7 @@ class PatternMgr:
 		words = None
 		if starType == 'star':
 			patMatch = patMatch[:patMatch.index(self._THAT)]
-			words = input.split()
+			words = input_.split()
 		elif starType == 'thatstar':
 			patMatch = patMatch[patMatch.index(self._THAT)+1 : patMatch.index(self._TOPIC)]
 			words = thatInput.split()
