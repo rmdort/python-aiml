@@ -2,10 +2,11 @@ Changelog for python-aiml
 
  - refactored to make it compatible for both Python2 (tested on 2.7) & Python3
    (tested on 3.4)
- -  Default encoding behaviour for input & output messages: defined encoding 
-    is used in Py2, unicode strings in Py3. This can be changed via 
-    setEncoding() method.
-
+ - Default encoding behaviour for input & output messages: defined encoding 
+   is used in Py2, unicode strings in Py3. This can be changed via 
+   setEncoding() method.
+ - Tests moved from inside package to separate test files, and refactored
+   to use standard Python unit test infrastructure
 
 
 

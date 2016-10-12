@@ -83,22 +83,3 @@ class WordSub(dict):
             self._update_regex()
         return self._regex.sub(self, text)
 
-# self-test
-if __name__ == "__main__":
-    subber = WordSub()
-    subber["apple"] = "banana"
-    subber["orange"] = "pear"
-    subber["banana" ] = "apple"
-    subber["he"] = "she"
-    subber["I'd"] = "I would"
-
-    # test case insensitivity
-    inStr =  "I'd like one apple, one Orange and one BANANA."
-    outStr = "I Would like one banana, one Pear and one APPLE."
-    if subber.sub(inStr) == outStr: print( "Test #1 PASSED" )
-    else: print( "Test #1 FAILED: '%s'" % subber.sub(inStr) )
-
-    inStr = "He said he'd like to go with me"
-    outStr = "She said she'd like to go with me"
-    if subber.sub(inStr) == outStr: print( "Test #2 PASSED" )
-    else: print( "Test #2 FAILED: '%s'" % subber.sub(inStr) )

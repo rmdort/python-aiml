@@ -25,8 +25,3 @@ def sentences(s):
     if len(sentenceList) == 0: sentenceList.append(s)
     return sentenceList
 
-# Self test
-if __name__ == "__main__":
-    # sentences
-    sents = sentences("First.  Second, still?  Third and Final!  Well, not really")
-    assert(len(sents) == 4)

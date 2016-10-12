@@ -19,29 +19,25 @@ except ImportError:
     from configparser import ConfigParser
 
 from .constants import *
+from . import DefaultSubs
+from . import Utils
 from .AimlParser import create_parser
-from .Utils import sentences as utils_sentences
 from .PatternMgr import PatternMgr
 from .WordSub import WordSub
-import aiml.DefaultSubs
 
-if PY3:
-    def tencode( msg, dummy ):
-        return str(msg)
 
-    def tdecode( msg, dummy ):
-        return str(msg)
-else:
-    def tencode( msg, encoding ):
-        try:
-            return msg.encode(encoding,'replace')
-        except UnicodeError: 
-            return msg
-    def tdecode( msg, encoding ):
-        try:
-            return msg.decode(encoding,'replace')
-        except UnicodeError: 
-            return msg
+
+def msg_encoder( encoding=None ):
+    """
+    Return a pair of functions to encode/decode messages
+    """
+    if encoding is None:
+        l = lambda x : unicode(x)
+        return (l,l)
+    else:
+        return (lambda x : x.encode(encoding,'replace'),
+                lambda x : x.decode(encoding,'replace') )
+
 
 
 class Kernel:
@@ -59,7 +55,7 @@ class Kernel:
         self._version = "python-aiml {}".format(VERSION)
         self._brain = PatternMgr()
         self._respondLock = threading.RLock()
-        self._textEncoding = "utf-8"
+        self.setTextEncoding( "utf-8" )
 
         # set up the sessions        
         self._sessions = {}
@@ -71,10 +67,10 @@ class Kernel:
 
         # set up the word substitutors (subbers):
         self._subbers = {}
-        self._subbers['gender'] = WordSub(aiml.DefaultSubs.defaultGender)
-        self._subbers['person'] = WordSub(aiml.DefaultSubs.defaultPerson)
-        self._subbers['person2'] = WordSub(aiml.DefaultSubs.defaultPerson2)
-        self._subbers['normal'] = WordSub(aiml.DefaultSubs.defaultNormal)
+        self._subbers['gender'] = WordSub(DefaultSubs.defaultGender)
+        self._subbers['person'] = WordSub(DefaultSubs.defaultPerson)
+        self._subbers['person2'] = WordSub(DefaultSubs.defaultPerson2)
+        self._subbers['normal'] = WordSub(DefaultSubs.defaultNormal)
         
         # set up the element processors
         self._elementProcessors = {
@@ -236,9 +232,27 @@ class Kernel:
         if name == "name":
             self._brain.setBotName(self.getBotPredicate("name"))
 
-    def setTextEncoding(self, encoding):
-        """Set the text encoding used when loading AIML files (Latin-1, UTF-8, etc.)."""
+    def setTextEncoding(self, encoding, msg_encoding=None):
+        """
+        Set the text encoding used when loading AIML files (Latin-1,UTF-8,etc).
+
+        Set also the encoding expected for input/output messages:
+          * for Python 2, "encoding" will also be used for messages, except 
+            when "msg_encoding" is not None (in which case it will define
+            the message encoding). If "msg_encoding" is False, then
+            messages will *not* be encoded (i.e. unicode strings)
+          * for Python 3, messages are expected to be standard Py3 strings 
+            (i.e., Unicode, with no encoding), except if "msg_encoding" is not 
+            None
+        """
         self._textEncoding = encoding
+        if msg_encoding is False:
+            self._enc = msg_encoder()
+        elif msg_encoding is not None:
+            self._enc = msg_encoder( msg_encoding )
+        else:
+            self._enc = msg_encoder( None if PY3 else encoding )
+
 
     def loadSubs(self, filename):
         """Load a substitutions file.
@@ -329,7 +343,7 @@ class Kernel:
 
         #ensure that input is a unicode string
         if not PY3:
-            try: input_ = tdecode(input_,self._textEncoding)
+            try: input_ = self._enc[1](input_)
             except UnicodeError: pass
             except AttributeError: pass
         
@@ -340,7 +354,7 @@ class Kernel:
         self._addSession(sessionID)
 
         # split the input into discrete sentences
-        sentences = utils_sentences(input_)
+        sentences = Utils.sentences(input_)
         finalResponse = ""
         for s in sentences:
             # Add the input to the history list before fetching the
@@ -369,7 +383,7 @@ class Kernel:
         
         # release the lock and return
         self._respondLock.release()
-        return tencode(finalResponse,self._textEncoding)
+        return self._enc[0](finalResponse)
 
     # This version of _respond() just fetches the response for some input.
     # It does not mess with the input and output histories.  Recursive calls
@@ -384,7 +398,7 @@ class Kernel:
         inputStack = self.getPredicate(self._inputStack, sessionID)
         if len(inputStack) > self._maxRecursionDepth:
             if self._verboseMode:
-                err = "WARNING: maximum recursion depth exceeded (input='%s')" % tencode(input_,self._textEncoding)
+                err = u"WARNING: maximum recursion depth exceeded (input='%s')" % self._enc[0](input_)
                 sys.stderr.write(err)
             return ""
 
@@ -412,7 +426,7 @@ class Kernel:
         elem = self._brain.match(subbedInput, subbedThat, subbedTopic)
         if elem is None:
             if self._verboseMode:
-                err = "WARNING: No match found for input: %s\n" % tencode(input_,self._textEncoding)
+                err = "WARNING: No match found for input: %s\n" % self._enc[0](input_)
                 sys.stderr.write(err)
         else:
             # Process the element into a response string.
@@ -444,7 +458,7 @@ class Kernel:
             # Oops -- there's no handler function for this element
             # type!
             if self._verboseMode:
-                err = "WARNING: No handler found for <%s> element\n" % tencode(elem[0],self._textEncoding)
+                err = "WARNING: No handler found for <%s> element\n" % self._enc[0](elem[0])
                 sys.stderr.write(err)
             return ""
         return handlerFunc(elem, sessionID)
@@ -532,7 +546,7 @@ class Kernel:
                         liAttr = li[1]
                         # if this is the last list item, it's allowed
                         # to have no attributes.  We just skip it for now.
-                        if len(liAttr.keys()) == 0 and li == listitems[-1]:
+                        if len(liAttr) == 0 and li == listitems[-1]:
                             continue
                         # get the name of the predicate to test
                         liName = name
@@ -928,7 +942,7 @@ class Kernel:
             out = os.popen(command)            
         except RuntimeError as msg:
             if self._verboseMode:
-                err = "WARNING: RuntimeError while processing \"system\" element:\n%s\n" % tencode(msg,self._textEncoding)
+                err = "WARNING: RuntimeError while processing \"system\" element:\n%s\n" % self._enc[0](msg)
                 sys.stderr.write(err)
             return "There was an error while computing my response.  Please inform my botmaster."
         time.sleep(0.01) # I'm told this works around a potential IOError exception.
@@ -1099,111 +1113,3 @@ class Kernel:
         """
         return self.version()
 
-
-##################################################
-### Self-test functions follow                 ###
-##################################################
-def _testTag(kern, tag, input_, outputList):
-    """Tests 'tag' by feeding the Kernel 'input'.  If the result
-    matches any of the strings in 'outputList', the test passes.
-    
-    """
-    global _numTests, _numPassed
-    _numTests += 1
-    print( "Testing <" + tag + ">:", end='' )
-    response = tdecode(kern.respond(input_),kern._textEncoding)
-    if response in outputList:
-        print( "PASSED" )
-        _numPassed += 1
-        return True
-    else:
-        print( "FAILED (response: '%s')" % tencode(response,kern._textEncoding) )
-        return False
-
-if __name__ == "__main__":
-    # Run some self-tests
-    k = Kernel()
-    k.bootstrap(learnFiles="self-test.aiml")
-
-    global _numTests, _numPassed
-    _numTests = 0
-    _numPassed = 0
-
-    _testTag(k, 'bot', 'test bot', ["My name is Nameless"])
-
-    k.setPredicate('gender', 'male')
-    _testTag(k, 'condition test #1', 'test condition name value', ['You are handsome'])
-    k.setPredicate('gender', 'female')
-    _testTag(k, 'condition test #2', 'test condition name value', [''])
-    _testTag(k, 'condition test #3', 'test condition name', ['You are beautiful'])
-    k.setPredicate('gender', 'robot')
-    _testTag(k, 'condition test #4', 'test condition name', ['You are genderless'])
-    _testTag(k, 'condition test #5', 'test condition', ['You are genderless'])
-    k.setPredicate('gender', 'male')
-    _testTag(k, 'condition test #6', 'test condition', ['You are handsome'])
-
-    # the date test will occasionally fail if the original and "test"
-    # times cross a second boundary.  There's no good way to avoid
-    # this problem and still do a meaningful test, so we simply
-    # provide a friendly message to be printed if the test fails.
-    date_warning = """
-    NOTE: the <date> test will occasionally report failure even if it
-    succeeds.  So long as the response looks like a date/time string,
-    there's nothing to worry about.
-    """
-    if not _testTag(k, 'date', 'test date', ["The date is %s" % time.asctime()]):
-        print( date_warning )
-    
-    _testTag(k, 'formal', 'test formal', ["Formal Test Passed"])
-    _testTag(k, 'gender', 'test gender', ["He'd told her he heard that her hernia is history"])
-    _testTag(k, 'get/set', 'test get and set', ["I like cheese. My favorite food is cheese"])
-    _testTag(k, 'gossip', 'test gossip', ["Gossip is not yet implemented"])
-    _testTag(k, 'id', 'test id', ["Your id is _global"])
-    _testTag(k, 'input', 'test input', ['You just said: test input'])
-    _testTag(k, 'javascript', 'test javascript', ["Javascript is not yet implemented"])
-    _testTag(k, 'lowercase', 'test lowercase', ["The Last Word Should Be lowercase"])
-    _testTag(k, 'person', 'test person', ['HE think i knows that my actions threaten him and his.'])
-    _testTag(k, 'person2', 'test person2', ['YOU think me know that my actions threaten you and yours.'])
-    _testTag(k, 'person2 (no contents)', 'test person2 I Love Lucy', ['YOU Love Lucy'])
-    _testTag(k, 'random', 'test random', ["response #1", "response #2", "response #3"])
-    _testTag(k, 'random empty', 'test random empty', ["Nothing here!"])
-    _testTag(k, 'sentence', "test sentence", ["My first letter should be capitalized."])
-    _testTag(k, 'size', "test size", ["I've learned %d categories" % k.numCategories()])
-    _testTag(k, 'sr', "test sr test srai", ["srai results: srai test passed"])
-    _testTag(k, 'sr nested', "test nested sr test srai", ["srai results: srai test passed"])
-    _testTag(k, 'srai', "test srai", ["srai test passed"])
-    _testTag(k, 'srai infinite', "test srai infinite", [""])
-    _testTag(k, 'star test #1', 'You should test star begin', ['Begin star matched: You should']) 
-    _testTag(k, 'star test #2', 'test star creamy goodness middle', ['Middle star matched: creamy goodness'])
-    _testTag(k, 'star test #3', 'test star end the credits roll', ['End star matched: the credits roll'])
-    _testTag(k, 'star test #4', 'test star having multiple stars in a pattern makes me extremely happy',
-             ['Multiple stars matched: having, stars in a pattern, extremely happy'])
-    _testTag(k, 'system', "test system", ["The system says hello!"])
-    _testTag(k, 'that test #1', "test that", ["I just said: The system says hello!"])
-    _testTag(k, 'that test #2', "test that", ["I have already answered this question"])
-    _testTag(k, 'thatstar test #1', "test thatstar", ["I say beans"])
-    _testTag(k, 'thatstar test #2', "test thatstar", ["I just said \"beans\""])
-    _testTag(k, 'thatstar test #3', "test thatstar multiple", ['I say beans and franks for everybody'])
-    _testTag(k, 'thatstar test #4', "test thatstar multiple", ['Yes, beans and franks for all!'])
-    _testTag(k, 'think', "test think", [""])
-    k.setPredicate("topic", "fruit")
-    _testTag(k, 'topic', "test topic", ["We were discussing apples and oranges"]) 
-    k.setPredicate("topic", "Soylent Green")
-    _testTag(k, 'topicstar test #1', 'test topicstar', ["Solyent Green is made of people!"])
-    k.setPredicate("topic", "Soylent Ham and Cheese")
-    _testTag(k, 'topicstar test #2', 'test topicstar multiple', ["Both Soylents Ham and Cheese are made of people!"])
-    _testTag(k, 'unicode support', u"郧上好", [u"Hey, you speak Chinese! 郧上好"])
-    _testTag(k, 'uppercase', 'test uppercase', ["The Last Word Should Be UPPERCASE"])
-    _testTag(k, 'version', 'test version', ["PyAIML is version %s" % k.version()])
-    _testTag(k, 'whitespace preservation', 'test whitespace', ["Extra   Spaces\n   Rule!   (but not in here!)    But   Here   They   Do!"])
-
-    # Report test results
-    print( "--------------------" )
-    if _numTests == _numPassed:
-        print( "%d of %d tests passed!" % (_numPassed, _numTests) )
-    else:
-        print( "%d of %d tests passed (see above for detailed errors)" % (_numPassed, _numTests) )
-
-    # Run an interactive interpreter
-    #print( "\nEntering interactive mode (ctrl-c to exit)" )
-    #while True: print( k.respond(raw_input("> ")) )

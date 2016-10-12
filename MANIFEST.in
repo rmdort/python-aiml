@@ -1,3 +1,4 @@
 include *.txt
-include aiml/*.aiml
-prune standard
+
+include test/*.py
+include test/*.aiml

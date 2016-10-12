@@ -1,2 +1,6 @@
 *.pyc
 *~
+
+MANIFEST
+dist
+python_aiml.egg-info

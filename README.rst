@@ -4,8 +4,31 @@ python-aiml
 This is a fork of the `PyAIML`_ Python AIML interpreter. It has been
 refactored to make it work in both Python 2 and Python 3.
 
-PyAIML is (c) Cort Stratton. python-aiml uses the same license as PyAIML 
+PyAIML is (c) Cort Stratton. *python-aiml* uses the same license as PyAIML 
 (2-clause BSD)
+
+
+
+Tests
+=====
+
+There are a number of unit tests included (in the ``test`` subdirectory); they 
+can be executed by the setup infrastructure as::
+
+  python setup.py test
+
+or they can also be launched by directly calling::
+
+  python test [testname ...]
+
+This last version allows executing only some of the test files by explicitly
+naming them in the command line; if none is specified all will be executed.
+
+
+
+.. _PyAIML: https://github.com/cdwfs/pyaiml
+
+------------------------------------------------------------------------------
 
 
 Original README from PyAIML
@@ -47,4 +70,3 @@ Quick & dirty example (assuming you've downloaded the "standard" AIML set)::
 	while True: print k.respond(raw_input("> "))
 
 
-.. _PyAIML: https://github.com/cdwfs/pyaiml
