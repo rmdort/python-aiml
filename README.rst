@@ -8,6 +8,15 @@ PyAIML is (c) Cort Stratton. *python-aiml* uses the same license as PyAIML
 (2-clause BSD)
 
 
+Scripts
+=======
+
+Two small scripts are added upon installation:
+
+* ``aiml-validate`` can be used to validate AIML files
+* ``aiml-bot`` can be used to start a simple interactive session with a bot,
+  after loading either AIML files or a saved brain file.
+
 
 Tests
 =====

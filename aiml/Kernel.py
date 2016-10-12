@@ -107,7 +107,8 @@ class Kernel:
             "version":      self._processVersion,
         }
 
-    def bootstrap(self, brainFile = None, learnFiles = [], commands = []):
+    def bootstrap(self, brainFile = None, learnFiles = [], commands = [],
+                  chdir=None):
         """Prepare a Kernel object for use.
 
         If a brainFile argument is provided, the Kernel attempts to
@@ -119,26 +120,37 @@ class Kernel:
         Finally, each of the input strings in the commands list is
         passed to respond().
 
+        The chdir parameter makes the kernel move to that directory before
+        performing any learn or command execution.
         """
         start = time.clock()
         if brainFile:
             self.loadBrain(brainFile)
 
-        # learnFiles might be a string, in which case it should be
-        # turned into a single-element list.
-        learns = learnFiles
-        try: learns = [ learnFiles + "" ]
-        except: pass
-        for file in learns:
-            self.learn(file)
-            
-        # ditto for commands
-        cmds = commands
-        try: cmds = [ commands + "" ]
-        except: pass
-        for cmd in cmds:
-            print( self._respond(cmd, self._globalSessionID) )
-            
+        prev = os.getcwd()
+        try:
+            if chdir:
+                os.chdir( chdir )
+
+            # learnFiles might be a string, in which case it should be
+            # turned into a single-element list.
+            learns = learnFiles
+            try: learns = [ learnFiles + "" ]
+            except: pass
+            for file in learns:
+                self.learn(file)
+
+            # ditto for commands
+            cmds = commands
+            try: cmds = [ commands + "" ]
+            except: pass
+            for cmd in cmds:
+                print( self._respond(cmd, self._globalSessionID) )
+
+        finally:
+            if chdir:
+                os.chdir( prev )
+
         if self._verboseMode:
             print( "Kernel bootstrap completed in %.2f seconds" % (time.clock() - start) )
 

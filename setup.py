@@ -47,9 +47,10 @@ PyAIML by Cort Stratton (cort@cortstratton.org)
 #                           'alice/*.xml',
                             ]},
 
-#    entry_points = { 'console_scripts': [
-#        'aiml-validate = aiml.script.aimlvalidate:main',
-#    ]},
+    entry_points = { 'console_scripts': [
+        'aiml-validate = aiml.script.aimlvalidate:main',
+        'aiml-bot = aiml.script.bot:main',
+    ]},
 
     test_suite = 'test.__main__.load_tests',
 
