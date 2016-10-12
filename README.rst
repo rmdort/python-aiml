@@ -1,24 +1,30 @@
-PyAIML -- The Python AIML Interpreter
-author: Cort Stratton
-web: https://github.com/cdwfs/pyaiml
+python-aiml
+***********
+
+This is a fork of the `PyAIML`_ Python AIML interpreter. It has been
+refactored to make it work in both Python 2 and Python 3.
+
+PyAIML is (c) Cort Stratton. python-aiml uses the same license as PyAIML 
+(2-clause BSD)
+
+
+Original README from PyAIML
+===========================
+
 
 PyAIML is an interpreter for AIML (the Artificial Intelligence Markup
 Language), implemented entirely in standard Python.  It strives for
 simple, austere, 100% compliance with the AIML 1.0.1 standard, no less
 and no more.
 
-This is currently pre-alpha software.  Use at your
-own risk!
+This is currently pre-alpha software.  Use at your own risk!
 
-For information on what's new in this version, see the
-CHANGES.txt file.
+For information on what's new in this version, see the ``CHANGES.txt`` file.
 
-For information on the state of development, including 
-the current level of AIML 1.0.1 compliance, see the
-SUPPORTED_TAGS.txt file.
+For information on the state of development, including the current level of 
+AIML 1.0.1 compliance, see the ``SUPPORTED_TAGS.txt`` file.
 
-Quick & dirty example (assuming you've downloaded the
-"standard" AIML set):
+Quick & dirty example (assuming you've downloaded the "standard" AIML set)::
 
 	import aiml
 
@@ -39,3 +45,6 @@ Quick & dirty example (assuming you've downloaded the
 	# Loop forever, reading user input from the command
 	# line and printing responses.
 	while True: print k.respond(raw_input("> "))
+
+
+.. _PyAIML: https://github.com/cdwfs/pyaiml

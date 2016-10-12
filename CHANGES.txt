@@ -1,3 +1,17 @@
+Changelog for python-aiml
+
+ - refactored to make it compatible for both Python2 (tested on 2.7) & Python3
+   (tested on 3.4)
+ -  Default encoding behaviour for input & output messages: defined encoding 
+    is used in Py2, unicode strings in Py3. This can be changed via 
+    setEncoding() method.
+
+
+
+
+------------------------------------------------------------------------------
+Changelog for PyAIML
+
 version 0.8.6
  - Fixed WorbSub module to work with words that consist entirely of punctuation :-).
  - Fixed PatternMgr module to replace non-alphanumerics with whitespace instead of simply
