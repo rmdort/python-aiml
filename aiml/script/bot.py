@@ -48,9 +48,9 @@ def read_args():
 def main():
     args = read_args()
 
-    # Create a Kernel object.
+    # Create a Kernel object. No string encoding (all I/O is unicode)
     kern = aiml.Kernel()
-
+    kern.setTextEncoding( None )
 
     # Use the Kernel's bootstrap() method to initialize the Kernel. The
     # optional learnFiles argument is a file (or list of files) to load.

@@ -27,7 +27,9 @@ class TestKernel( unittest.TestCase ):
 
         """
         print( "Testing <" + tag + ">", end='\n' )
-        response = self.k._enc[1]( self.k.respond( self.k._enc[0](input_) ) )
+        # Send the input and collect the output
+        response = self.k._cod.dec( self.k.respond( self.k._cod.enc(input_) ) )
+        # Check that output is as expected
         self.assertIn( response, outputList, msg="input=%s"%input_ )
 
     def test01_bot( self ):

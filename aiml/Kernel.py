@@ -13,6 +13,7 @@ import sys
 import time
 import threading
 import xml.sax
+from collections import namedtuple
 try:
     from ConfigParser import ConfigParser
 except ImportError:
@@ -29,15 +30,16 @@ from .WordSub import WordSub
 
 def msg_encoder( encoding=None ):
     """
-    Return a pair of functions to encode/decode messages
+    Return a named tuple with a pair of functions to encode/decode messages. 
+    For None encoding, a passthrough function will be returned
     """
-    if encoding is None:
+    Codec = namedtuple( 'Codec', ['enc','dec'] )
+    if encoding in (None,False):
         l = lambda x : unicode(x)
-        return (l,l)
+        return Codec(l,l)
     else:
-        return (lambda x : x.encode(encoding,'replace'),
-                lambda x : x.decode(encoding,'replace') )
-
+        return Codec(lambda x : x.encode(encoding,'replace'),
+                     lambda x : x.decode(encoding,'replace') )
 
 
 class Kernel:
@@ -55,7 +57,7 @@ class Kernel:
         self._version = "python-aiml {}".format(VERSION)
         self._brain = PatternMgr()
         self._respondLock = threading.RLock()
-        self.setTextEncoding( "utf-8" )
+        self.setTextEncoding( None if PY3 else "utf-8" )
 
         # set up the sessions        
         self._sessions = {}
@@ -244,26 +246,17 @@ class Kernel:
         if name == "name":
             self._brain.setBotName(self.getBotPredicate("name"))
 
-    def setTextEncoding(self, encoding, msg_encoding=None):
+    def setTextEncoding(self, encoding ):
         """
-        Set the text encoding used when loading AIML files (Latin-1,UTF-8,etc).
-
-        Set also the encoding expected for input/output messages:
-          * for Python 2, "encoding" will also be used for messages, except 
-            when "msg_encoding" is not None (in which case it will define
-            the message encoding). If "msg_encoding" is False, then
-            messages will *not* be encoded (i.e. unicode strings)
-          * for Python 3, messages are expected to be standard Py3 strings 
-            (i.e., Unicode, with no encoding), except if "msg_encoding" is not 
-            None
+        Set the I/O text encoding expected. All strings loaded from AIML files
+        will be converted to it. 
+        The respond() method is expected to be passed strings encoded with it 
+        (str in Py2, bytes in Py3) and will also return them.
+        If it is False, then strings are assumed *not* to be encoded, i.e.
+        they will be unicode strings (unicode in Py2, str in Py3)
         """
         self._textEncoding = encoding
-        if msg_encoding is False:
-            self._enc = msg_encoder()
-        elif msg_encoding is not None:
-            self._enc = msg_encoder( msg_encoding )
-        else:
-            self._enc = msg_encoder( None if PY3 else encoding )
+        self._cod = msg_encoder( encoding )
 
 
     def loadSubs(self, filename):
@@ -353,49 +346,55 @@ class Kernel:
         if len(input_) == 0:
             return ""
 
-        #ensure that input is a unicode string
-        if not PY3:
-            try: input_ = self._enc[1](input_)
-            except UnicodeError: pass
-            except AttributeError: pass
+        # Decode the input (it is assumed to be an encoded string) 
+        # into a unicode string. Note that if encoding is False, this will
+        # be a no-op
+        try: input_ = self._cod.dec(input_)
+        except UnicodeError: pass
+        except AttributeError: pass
         
         # prevent other threads from stomping all over us.
         self._respondLock.acquire()
 
-        # Add the session, if it doesn't already exist
-        self._addSession(sessionID)
+        try:
+            # Add the session, if it doesn't already exist
+            self._addSession(sessionID)
 
-        # split the input into discrete sentences
-        sentences = Utils.sentences(input_)
-        finalResponse = ""
-        for s in sentences:
-            # Add the input to the history list before fetching the
-            # response, so that <input/> tags work properly.
-            inputHistory = self.getPredicate(self._inputHistory, sessionID)
-            inputHistory.append(s)
-            while len(inputHistory) > self._maxHistorySize:
-                inputHistory.pop(0)
-            self.setPredicate(self._inputHistory, inputHistory, sessionID)
-            
-            # Fetch the response
-            response = self._respond(s, sessionID)
+            # split the input into discrete sentences
+            sentences = Utils.sentences(input_)
+            finalResponse = ""
+            for s in sentences:
+                # Add the input to the history list before fetching the
+                # response, so that <input/> tags work properly.
+                inputHistory = self.getPredicate(self._inputHistory, sessionID)
+                inputHistory.append(s)
+                while len(inputHistory) > self._maxHistorySize:
+                    inputHistory.pop(0)
+                self.setPredicate(self._inputHistory, inputHistory, sessionID)
 
-            # add the data from this exchange to the history lists
-            outputHistory = self.getPredicate(self._outputHistory, sessionID)
-            outputHistory.append(response)
-            while len(outputHistory) > self._maxHistorySize:
-                outputHistory.pop(0)
-            self.setPredicate(self._outputHistory, outputHistory, sessionID)
+                # Fetch the response
+                response = self._respond(s, sessionID)
 
-            # append this response to the final response.
-            finalResponse += (response + "  ")
-        finalResponse = finalResponse.strip()
+                # add the data from this exchange to the history lists
+                outputHistory = self.getPredicate(self._outputHistory, sessionID)
+                outputHistory.append(response)
+                while len(outputHistory) > self._maxHistorySize:
+                    outputHistory.pop(0)
+                self.setPredicate(self._outputHistory, outputHistory, sessionID)
 
-        assert(len(self.getPredicate(self._inputStack, sessionID)) == 0)
-        
-        # release the lock and return
-        self._respondLock.release()
-        return self._enc[0](finalResponse)
+                # append this response to the final response.
+                finalResponse += (response + "  ")
+
+            finalResponse = finalResponse.strip()
+            assert(len(self.getPredicate(self._inputStack, sessionID)) == 0)
+
+            # and return, encoding the string into the I/O encoding
+            return self._cod.enc(finalResponse)
+
+        finally:
+            # release the lock
+            self._respondLock.release()
+
 
     # This version of _respond() just fetches the response for some input.
     # It does not mess with the input and output histories.  Recursive calls
@@ -410,7 +409,7 @@ class Kernel:
         inputStack = self.getPredicate(self._inputStack, sessionID)
         if len(inputStack) > self._maxRecursionDepth:
             if self._verboseMode:
-                err = u"WARNING: maximum recursion depth exceeded (input='%s')" % self._enc[0](input_)
+                err = u"WARNING: maximum recursion depth exceeded (input='%s')" % self._cod.enc(input_)
                 sys.stderr.write(err)
             return ""
 
@@ -438,7 +437,7 @@ class Kernel:
         elem = self._brain.match(subbedInput, subbedThat, subbedTopic)
         if elem is None:
             if self._verboseMode:
-                err = "WARNING: No match found for input: %s\n" % self._enc[0](input_)
+                err = "WARNING: No match found for input: %s\n" % self._cod.enc(input_)
                 sys.stderr.write(err)
         else:
             # Process the element into a response string.
@@ -470,7 +469,7 @@ class Kernel:
             # Oops -- there's no handler function for this element
             # type!
             if self._verboseMode:
-                err = "WARNING: No handler found for <%s> element\n" % self._enc[0](elem[0])
+                err = "WARNING: No handler found for <%s> element\n" % self._cod.enc(elem[0])
                 sys.stderr.write(err)
             return ""
         return handlerFunc(elem, sessionID)
@@ -954,7 +953,7 @@ class Kernel:
             out = os.popen(command)            
         except RuntimeError as msg:
             if self._verboseMode:
-                err = "WARNING: RuntimeError while processing \"system\" element:\n%s\n" % self._enc[0](msg)
+                err = "WARNING: RuntimeError while processing \"system\" element:\n%s\n" % self._cod.enc(msg)
                 sys.stderr.write(err)
             return "There was an error while computing my response.  Please inform my botmaster."
         time.sleep(0.01) # I'm told this works around a potential IOError exception.

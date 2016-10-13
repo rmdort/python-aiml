@@ -1,3 +1,5 @@
+# -*- indent-tabs-mode: t -*-
+
 from __future__ import print_function
 
 from xml.sax.handler import ContentHandler
@@ -23,7 +25,7 @@ class AimlHandler(ContentHandler):
 	_STATE_InsideTemplate = 7
 	_STATE_AfterTemplate  = 8
 	
-	def __init__(self, encoding = "UTF-8"):
+	def __init__(self, encoding=None):
 		self.categories = {}
 		self._encoding = encoding
 		self._state = self._STATE_OutsideAiml
@@ -72,7 +74,7 @@ class AimlHandler(ContentHandler):
 	def setEncoding(self, encoding):
 		"""Set the text encoding to use when encoding strings read from XML.
 
-		Defaults to 'UTF-8'.
+		Defaults to no encoding.
 
 		"""
 		self._encoding = encoding
@@ -223,13 +225,14 @@ class AimlHandler(ContentHandler):
 			# Starting a new element inside the current pattern. First
 			# we need to convert 'attr' into a native Python dictionary,
 			# so it can later be marshaled.
-			attrDict = {}
-			if PY3:
-				attrDict = { str(k) : str(v) for k,v in attr.items() }
-			else:
-				for k,v in attr.items():
+			if self._encoding:
+				it = ( (k.encode(self._encoding), unicode(v))
+				       for k,v in attr.items() )
 				#attrDict[k[1].encode(self._encoding)] = v.encode(self._encoding)
-                                        attrDict[k.encode(self._encoding)] = unicode(v)
+			else:
+				it = ( (unicode(k),unicode(v))
+				       for k,v in attr.items() )
+			attrDict = dict( it )
 			self._validateElemStart(name, attrDict, self._version)
 			# Push the current element onto the element stack.
 			if PY3:
