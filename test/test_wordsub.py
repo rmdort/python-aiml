@@ -25,11 +25,11 @@ class TestWordSub( unittest.TestCase ):
         '''test wordsub'''
         inStr = "He said he'd like to go with me"
         outStr = "She said she'd like to go with me"
-        self.assertEquals( outStr, self.subber.sub(inStr) )
+        self.assertEqual( outStr, self.subber.sub(inStr) )
 
     def test02_case( self ):
         '''test case insensitivity'''
         inStr =  "I'd like one apple, one Orange and one BANANA."
         outStr = "I Would like one banana, one Pear and one APPLE."
-        self.assertEquals( outStr, self.subber.sub(inStr) )
+        self.assertEqual( outStr, self.subber.sub(inStr) )
 

@@ -20,5 +20,5 @@ class TestUtils( unittest.TestCase ):
 
     def test_sentences( self ):
         sents = Utils.sentences("First.  Second, still?  Third and Final!  Well, not really")
-        self.assertEquals( 4, len(sents) )
+        self.assertEqual( 4, len(sents) )
 
