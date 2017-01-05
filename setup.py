@@ -20,8 +20,8 @@ setup_args = dict( name="python-aiml",
 Markup Language developed by Dr. Richard Wallace of the A.L.I.C.E. Foundation.
 It can be used to implement a conversational AI program.
 
-Forked from PyAIML 0.8.6 (https://github.com/cdwfs/pyaiml)
-PyAIML by Cort Stratton (cort@cortstratton.org)
+Forked from PyAIML 0.8.6 (https://github.com/cdwfs/pyaiml) 
+PyAIML (c) Cort Stratton
 """,
     url="https://github.com/paulovn/python-aiml",
     platforms=["any"],
