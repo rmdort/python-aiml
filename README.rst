@@ -25,7 +25,7 @@ Datasets
 The installation includes two AIML datasets:
 
 * The *standard* AIML set, as it was included in PyAIML
-* The *`Free ALICE AIML set`_* v. 1.9, taken from the data published by the
+* The `Free ALICE AIML set`_ v. 1.9, taken from the data published by the
   `ALICE AI Foundation`_ (with a few small fixes in files that did not 
   validate as `AIML 1.0.1`_)
 
