@@ -24,10 +24,10 @@ Datasets
 
 The installation includes two AIML datasets:
 
- * The *standard* AIML set, as it was included in PyAIML
- * The *`Free ALICE AIML set`_* v. 1.9, taken from the data published by the
-   `ALICE AI Foundation`_ (with a few small fixes in files that did not 
-   validate as AIML 1.0.1)
+* The *standard* AIML set, as it was included in PyAIML
+* The *`Free ALICE AIML set`_* v. 1.9, taken from the data published by the
+  `ALICE AI Foundation`_ (with a few small fixes in files that did not 
+  validate as `AIML 1.0.1`_)
 
 They can be loaded via the ``bootstrap`` method in the ``Kernel`` class. See 
 the `bot.py`_ script for an example.
@@ -56,7 +56,7 @@ naming them in the command line; if none is specified all will be executed.
 .. _LGPL: http://www.gnu.org/licenses/lgpl.html
 .. _ALICE AI Foundation: http://alice.pandorabots.com/
 .. _bot.py: aiml/script/bot.py
-
+.. _AIML 1.0.1: http://www.alicebot.org/TR/2011/
 
 ------------------------------------------------------------------------------
 
