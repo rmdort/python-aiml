@@ -23,9 +23,11 @@ Datasets
 ========
 
 The installation includes two AIML datasets:
+
  * The *standard* AIML set, as it was included in PyAIML
- * The `Free ALICE AIML set`_ v. 1.9, taken from the data published by the
-   `ALICE AI Foundation`_
+ * The *`Free ALICE AIML set`_* v. 1.9, taken from the data published by the
+   `ALICE AI Foundation`_ (with a few small fixes in files that did not 
+   validate as AIML 1.0.1)
 
 They can be loaded via the ``bootstrap`` method in the ``Kernel`` class. See 
 the `bot.py`_ script for an example.
