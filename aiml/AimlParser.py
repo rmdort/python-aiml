@@ -225,20 +225,11 @@ class AimlHandler(ContentHandler):
 			# Starting a new element inside the current pattern. First
 			# we need to convert 'attr' into a native Python dictionary,
 			# so it can later be marshaled.
-			if self._encoding:
-				it = ( (k.encode(self._encoding), unicode(v))
-				       for k,v in attr.items() )
-				#attrDict[k[1].encode(self._encoding)] = v.encode(self._encoding)
-			else:
-				it = ( (unicode(k),unicode(v))
-				       for k,v in attr.items() )
+			it = ( (unicode(k),unicode(v)) for k,v in attr.items() )
 			attrDict = dict( it )
 			self._validateElemStart(name, attrDict, self._version)
 			# Push the current element onto the element stack.
-			if PY3:
-				self._elemStack.append([str(name),attrDict])
-			else:
-				self._elemStack.append([name.encode(self._encoding),attrDict])
+			self._elemStack.append( [unicode(name),attrDict] )
 			self._pushWhitespaceBehavior(attr)
 			# If this is a condition element, push a new entry onto the
 			# foundDefaultLiStack

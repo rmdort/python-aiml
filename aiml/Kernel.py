@@ -42,6 +42,8 @@ def msg_encoder( encoding=None ):
                      lambda x : x.decode(encoding,'replace') )
 
 
+
+
 class Kernel:
     # module constants
     _globalSessionID = "_global" # key of the global session (duh)
@@ -113,17 +115,19 @@ class Kernel:
                   chdir=None):
         """Prepare a Kernel object for use.
 
-        If a brainFile argument is provided, the Kernel attempts to
+        If a `brainFile` argument is provided, the Kernel attempts to
         load the brain at the specified filename.
 
-        If learnFiles is provided, the Kernel attempts to load the
+        If `learnFiles` is provided, the Kernel attempts to load the
         specified AIML files.
 
-        Finally, each of the input strings in the commands list is
+        Finally, each of the input strings in the `commands` list is
         passed to respond().
 
-        The chdir parameter makes the kernel move to that directory before
-        performing any learn or command execution.
+        The `chdir` argument makes the it change to that directory before
+        performing any learn or command execution (but after loadBrain
+        processing). Upon returning the current directory is moved back to 
+        where it was before.
         """
         start = time.clock()
         if brainFile:
@@ -136,17 +140,15 @@ class Kernel:
 
             # learnFiles might be a string, in which case it should be
             # turned into a single-element list.
-            learns = learnFiles
-            try: learns = [ learnFiles + "" ]
-            except: pass
-            for file in learns:
+            if isinstance( learnFiles, (str,unicode) ):
+                learnFiles = (learnFiles,)
+            for file in learnFiles:
                 self.learn(file)
 
             # ditto for commands
-            cmds = commands
-            try: cmds = [ commands + "" ]
-            except: pass
-            for cmd in cmds:
+            if isinstance( commands, (str,unicode) ):
+                commands = (commands,)
+            for cmd in commands:
                 print( self._respond(cmd, self._globalSessionID) )
 
         finally:
@@ -344,11 +346,10 @@ class Kernel:
     def respond(self, input_, sessionID = _globalSessionID):
         """Return the Kernel's response to the input string."""
         if len(input_) == 0:
-            return ""
+            return u""
 
-        # Decode the input (it is assumed to be an encoded string) 
-        # into a unicode string. Note that if encoding is False, this will
-        # be a no-op
+        # Decode the input (assumed to be an encoded string) into a unicode 
+        # string. Note that if encoding is False, this will be a no-op
         try: input_ = self._cod.dec(input_)
         except UnicodeError: pass
         except AttributeError: pass
@@ -362,7 +363,7 @@ class Kernel:
 
             # split the input into discrete sentences
             sentences = Utils.sentences(input_)
-            finalResponse = ""
+            finalResponse = u""
             for s in sentences:
                 # Add the input to the history list before fetching the
                 # response, so that <input/> tags work properly.
@@ -383,9 +384,10 @@ class Kernel:
                 self.setPredicate(self._outputHistory, outputHistory, sessionID)
 
                 # append this response to the final response.
-                finalResponse += (response + "  ")
+                finalResponse += (response + u"  ")
 
             finalResponse = finalResponse.strip()
+            #print( "@ASSERT", self.getPredicate(self._inputStack, sessionID))
             assert(len(self.getPredicate(self._inputStack, sessionID)) == 0)
 
             # and return, encoding the string into the I/O encoding
@@ -403,7 +405,7 @@ class Kernel:
     def _respond(self, input_, sessionID):
         """Private version of respond(), does the real work."""
         if len(input_) == 0:
-            return ""
+            return u""
 
         # guard against infinite recursion
         inputStack = self.getPredicate(self._inputStack, sessionID)
@@ -411,7 +413,7 @@ class Kernel:
             if self._verboseMode:
                 err = u"WARNING: maximum recursion depth exceeded (input='%s')" % self._cod.enc(input_)
                 sys.stderr.write(err)
-            return ""
+            return u""
 
         # push the input onto the input stack
         inputStack = self.getPredicate(self._inputStack, sessionID)
@@ -433,7 +435,7 @@ class Kernel:
         subbedTopic = self._subbers['normal'].sub(topic)
 
         # Determine the final response.
-        response = ""
+        response = u""
         elem = self._brain.match(subbedInput, subbedThat, subbedTopic)
         if elem is None:
             if self._verboseMode:
@@ -442,7 +444,7 @@ class Kernel:
         else:
             # Process the element into a response string.
             response += self._processElement(elem, sessionID).strip()
-            response += " "
+            response += u" "
         response = response.strip()
 
         # pop the top entry off the input stack.
@@ -466,12 +468,11 @@ class Kernel:
         try:
             handlerFunc = self._elementProcessors[elem[0]]
         except:
-            # Oops -- there's no handler function for this element
-            # type!
+            # Oops -- there's no handler function for this element type!
             if self._verboseMode:
                 err = "WARNING: No handler found for <%s> element\n" % self._cod.enc(elem[0])
                 sys.stderr.write(err)
-            return ""
+            return u""
         return handlerFunc(elem, sessionID)
 
 
@@ -852,6 +853,7 @@ class Kernel:
         value = ""
         for e in elem[2:]:
             value += self._processElement(e, sessionID)
+        #print( "@ELEM", elem ) 
         self.setPredicate(elem[1]['name'], value, sessionID)    
         return value
 
