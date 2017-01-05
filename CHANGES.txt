@@ -1,17 +1,25 @@
 Changelog for python-aiml
 
- - refactored to make it compatible for both Python2 (tested on 2.7) & Python3
-   (tested on 3.4)
- - Default encoding behaviour for input & output strings: UTF-8 encoded
-   strings are used in Py2 (for backwards compatibility), unicode strings 
-   in Py3. This can be changed via the Kernel.setTextEncoding() method.
- - Tests moved from inside package to separate test files, and refactored
-   to use standard Python unit test infrastructure
- - Additional argument 'chdir' to Kernel.bootstrap() method
- - aimlvalidate & test scripts install as package scripts "aiml-validate" and
-   "aiml-bot". Thet have been refactored and contain additional arguments
- - The "standard" AIML set has been moved as package data, and installs with
-   it
+version 0.9.0
+
+* Refactored to make it compatible for both Python2 (tested on 2.7) & Python3 
+  (tested on 3.4)
+* By default utf8-encoded strings are used in Py2 (for backwards compatibility),
+  and standard strings (i.e unicode) in Py3
+   - This can be changed via the `Kernel.setTextEncoding()` method.
+* Tests moved from inside package to separate test files, and refactored to use
+  standard Python unit test infrastructure
+* Additional argument _chdir_ to `Kernel.bootstrap()` method
+* aimlvalidate & test scripts install now as package scripts aiml-validate and
+  aiml-bot. They have been refactored and contain additional arguments
+* The "standard" AIML set has been moved as package data, and installs with it
+* Added ALICE AIML v. 1.9 from aiml-en-us-foundation-alice at 
+  https://code.google.com/archive/p/aiml-en-us-foundation-alice/downloads
+  * aiml-en-us-foundation-alice has GNU Lesser GPL license
+    (http://www.gnu.org/licenses/lgpl.html)
+  * a few AIML 1.9 files have been corrected. Two of them have been commented
+    out since they use the AIML 2.0 <learn> construct
+
 
 
 ------------------------------------------------------------------------------

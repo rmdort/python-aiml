@@ -1,13 +1,17 @@
-# Command to build:
-#from distutils.core import setup
+'''
+Build the python-aiml Py2/Py3 package
+'''
 
 from setuptools import setup
 import glob
 
+from aiml.constants import VERSION
+
 #package_prefix = "Lib/site-packages/aiml"
 
+
 setup_args = dict( name="python-aiml",
-    version="0.9.0",
+    version=VERSION,
     author="Paulo Villegas",
     author_email="paulo.vllgs@gmail.com",
     
@@ -27,6 +31,8 @@ PyAIML by Cort Stratton (cort@cortstratton.org)
                  "Programming Language :: Python",
                  "Programming Language :: Python :: 2.7",
                  "Programming Language :: Python :: 3",
+                 "Programming Language :: Python :: 3.4",
+                 "Programming Language :: Python :: 3.5",
                  "License :: OSI Approved :: BSD License",
                  "Operating System :: OS Independent",
                  "Topic :: Communications :: Chat",
@@ -43,8 +49,8 @@ PyAIML by Cort Stratton (cort@cortstratton.org)
     include_package_data = False,       # otherwise package_data is not used
     package_data={ 'aiml': ['botdata/standard/*.aiml',
                             'botdata/standard/*.xml',
-#                           'alice/*.aiml',
-#                           'alice/*.xml',
+                            'botdata/alice/*.aiml',
+                            'botdata/alice/*.xml',
                             ]},
 
     entry_points = { 'console_scripts': [

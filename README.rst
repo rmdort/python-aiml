@@ -2,10 +2,11 @@ python-aiml
 ***********
 
 This is a fork of the `PyAIML`_ Python AIML interpreter. It has been
-refactored to make it work in both Python 2 and Python 3.
+refactored to make it install and work in both Python 2.7 and Python 3.
 
 PyAIML is (c) Cort Stratton. *python-aiml* uses the same license as PyAIML 
-(2-clause BSD)
+(2-clause BSD), except for the ALICE AIML files taken from the `Free ALICE AIML
+set`_, which are licensed with the `LGPL`_ license.
 
 
 Scripts
@@ -16,6 +17,21 @@ Two small scripts are added upon installation:
 * ``aiml-validate`` can be used to validate AIML files
 * ``aiml-bot`` can be used to start a simple interactive session with a bot,
   after loading either AIML files or a saved brain file.
+
+
+Datasets
+========
+
+The installation includes two AIML datasets:
+
+* The *standard* AIML set, as it was included in PyAIML
+* The `Free ALICE AIML set`_ v. 1.9, taken from the data published by the
+  `ALICE AI Foundation`_ (with a few small fixes in files that did not 
+  validate as `AIML 1.0.1`_)
+
+They can be loaded via the ``bootstrap`` method in the ``Kernel`` class. See 
+the `bot.py`_ script for an example.
+
 
 
 Tests
@@ -36,6 +52,11 @@ naming them in the command line; if none is specified all will be executed.
 
 
 .. _PyAIML: https://github.com/cdwfs/pyaiml
+.. _Free ALICE AIML set: https://code.google.com/archive/p/aiml-en-us-foundation-alice/
+.. _LGPL: http://www.gnu.org/licenses/lgpl.html
+.. _ALICE AI Foundation: http://alice.pandorabots.com/
+.. _bot.py: aiml/script/bot.py
+.. _AIML 1.0.1: http://www.alicebot.org/TR/2011/
 
 ------------------------------------------------------------------------------
 
