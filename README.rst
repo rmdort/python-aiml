@@ -1,0 +1,81 @@
+python-aiml
+***********
+
+This is a fork of the `PyAIML`_ Python AIML interpreter. It has been
+refactored to make it work in both Python 2 and Python 3.
+
+PyAIML is (c) Cort Stratton. *python-aiml* uses the same license as PyAIML 
+(2-clause BSD)
+
+
+Scripts
+=======
+
+Two small scripts are added upon installation:
+
+* ``aiml-validate`` can be used to validate AIML files
+* ``aiml-bot`` can be used to start a simple interactive session with a bot,
+  after loading either AIML files or a saved brain file.
+
+
+Tests
+=====
+
+There are a number of unit tests included (in the ``test`` subdirectory); they 
+can be executed by the setup infrastructure as::
+
+  python setup.py test
+
+or they can also be launched by directly calling::
+
+  python test [testname ...]
+
+This last version allows executing only some of the test files by explicitly
+naming them in the command line; if none is specified all will be executed.
+
+
+
+.. _PyAIML: https://github.com/cdwfs/pyaiml
+
+------------------------------------------------------------------------------
+
+
+Original README from PyAIML
+===========================
+
+
+PyAIML is an interpreter for AIML (the Artificial Intelligence Markup
+Language), implemented entirely in standard Python.  It strives for
+simple, austere, 100% compliance with the AIML 1.0.1 standard, no less
+and no more.
+
+This is currently pre-alpha software.  Use at your own risk!
+
+For information on what's new in this version, see the ``CHANGES.txt`` file.
+
+For information on the state of development, including the current level of 
+AIML 1.0.1 compliance, see the ``SUPPORTED_TAGS.txt`` file.
+
+Quick & dirty example (assuming you've downloaded the "standard" AIML set)::
+
+	import aiml
+
+	# The Kernel object is the public interface to
+	# the AIML interpreter.
+	k = aiml.Kernel()
+
+	# Use the 'learn' method to load the contents
+	# of an AIML file into the Kernel.
+	k.learn("std-startup.xml")
+
+	# Use the 'respond' method to compute the response
+	# to a user's input string.  respond() returns
+	# the interpreter's response, which in this case
+	# we ignore.
+	k.respond("load aiml b")
+
+	# Loop forever, reading user input from the command
+	# line and printing responses.
+	while True: print k.respond(raw_input("> "))
+
+
