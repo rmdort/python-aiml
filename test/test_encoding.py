@@ -22,11 +22,12 @@ class TestEncoding( unittest.TestCase ):
     def tearDown(self):
         del self.k
 
-    def _testTag(self, input_, outputList, name=None):
+    def _testTag(self, input_, outputList, name=None, encoding='utf-8'):
         """Test by feeding the Kernel 'input'.  If the result
         matches any of the strings in 'outputList', the test passes.
         """
-        print( "Testing <" + (name or input_) + ">", end='\n' )
+        
+        print( b"Testing <" + (name or input_).encode(encoding) + b">")
         response = self.k._cod.dec( self.k.respond( self.k._cod.enc(input_) ) )
         self.assertIn( response, outputList, msg="input=%s"%input_ )
 
@@ -45,5 +46,7 @@ class TestEncoding( unittest.TestCase ):
         self._testTag( u'pattern with Á', [u"pattern #2 matched: Á"])
 
     def test04_iso8859( self ):
-        self.k.setTextEncoding( 'iso-8859-1' )
-        self._testTag( u'pattern with Á', [u"pattern #2 matched: Á"])
+        enc = 'iso-8859-1'
+        self.k.setTextEncoding( enc )
+        self._testTag( u'pattern with Á', [u"pattern #2 matched: Á"],
+                       encoding=enc)
