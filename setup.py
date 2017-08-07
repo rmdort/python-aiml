@@ -33,6 +33,7 @@ PyAIML (c) Cort Stratton
                  "Programming Language :: Python :: 3",
                  "Programming Language :: Python :: 3.4",
                  "Programming Language :: Python :: 3.5",
+                 "Programming Language :: Python :: 3.6",
                  "License :: OSI Approved :: BSD License",
                  "Operating System :: OS Independent",
                  "Topic :: Communications :: Chat",
