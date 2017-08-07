@@ -1,5 +1,11 @@
 Changelog for python-aiml
 
+version 0.9.1
+
+* Fixed compatibility with Python 3.6 (removed usage of re.LOCALE) [Ryan Arredondo]
+* Make some unit tests more robust against terminal encodings [Ryan Arredondo]
+
+
 version 0.9.0
 
 * Refactored to make it compatible for both Python2 (tested on 2.7) & Python3 
