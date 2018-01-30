@@ -528,6 +528,7 @@ class Kernel:
         attr = None
         response = ""
         attr = elem[1]
+        wildcard = '*'
         
         # Case #1: test the value of a specific predicate for a
         # specific value.
@@ -568,6 +569,10 @@ class Kernel:
                         liValue = liAttr['value']
                         # do the test
                         if self.getPredicate(liName, sessionID) == liValue:
+                            foundMatch = True
+                            response += self._processElement(li,sessionID)
+                            break
+                        if liValue == wildcard and self.getPredicate(liName, sessionID):
                             foundMatch = True
                             response += self._processElement(li,sessionID)
                             break
